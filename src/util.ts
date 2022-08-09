@@ -55,7 +55,7 @@ export async function readCifFile(path: string) {
  * Helper method to parse cif data
  * @param data string of cif data
  */
-async function parseCif(data: string | Uint8Array) {
+export async function parseCif(data: string | Uint8Array) {
     const comp = CIF.parse(data);
     console.time('parseCif');
     const parsed = await comp.run();

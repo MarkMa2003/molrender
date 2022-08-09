@@ -106,7 +106,8 @@ async function main() {
     const fileName = getFileName(args.in);
     const cif = await readCifFile(args.in);
     const trajectory = await getTrajectory(cif as CifFrame);
-
+    console.log(trajectory)
+    console.log('hello')
     switch (args.render) {
         case 'all':
             await renderer.renderAll(trajectory, args.out, fileName);
