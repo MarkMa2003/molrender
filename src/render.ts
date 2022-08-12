@@ -79,6 +79,7 @@ function getPositions(structure: Structure) {
         }
         m += elements.length * 3;
     }
+    console.log(positions)
     return positions;
 }
 
@@ -232,7 +233,7 @@ export class ImageRenderer {
         if (colorThemeProvider.ensureCustomProperties) {
             await colorThemeProvider.ensureCustomProperties.attach({ assetManager: this.assetManager, runtime: SyncRuntimeContext }, { structure });
         }
-
+        
         const repr = provider.factory(this.reprCtx, provider.getParams);
         repr.setTheme({
             color: this.reprCtx.colorThemeRegistry.create(params.colorTheme, { structure }, { carbonColor: { name: 'element-symbol' } }),
@@ -242,6 +243,9 @@ export class ImageRenderer {
         if (params.radiusOffset) Object.assign(props, { radiusOffset: params.radiusOffset });
         await repr.createOrUpdate(props, structure).run();
         this.canvas3d.add(repr);
+        console.log('//////////provider/////////')
+        console.log(provider.getData)
+        console.log(provider.getParams)
     }
 
     async addCartoon(structure: Structure, params: Partial<ReprParams> = {}) {
@@ -346,8 +350,15 @@ export class ImageRenderer {
     focusCamera(structure: Structure) {
         const principalAxes = PrincipalAxes.ofPositions(getPositions(structure));
         const { origin, dirA, dirC } = principalAxes.boxAxes;
+        console.log('/////origin/////')
+        console.log(origin)
+        console.log('/////dirA/////')
+        console.log(dirA)
+        console.log('/////dirC/////')
+        console.log(dirC)
         const radius = Vec3.magnitude(dirA);
-
+        console.log('/////radius/////')
+        console.log(radius)
         // move camera far in the direction from the origin, so we get a view from the outside
         const position = Vec3();
         Vec3.scaleAndAdd(position, position, origin, 100);
@@ -398,6 +409,8 @@ export class ImageRenderer {
         const structure = getStructureFromExpression(modelStructure, MS.struct.generator.atomGroups({
             'chain-test': MS.core.rel.eq([MS.ammp('label_asym_id'), chainName])
         }));
+        //structure>>>units>>>model
+        //console.log(structure.units[0].model)
         const colorTheme = this.checkPlddtColorTheme(structure);
         await this.render(structure, `${outPath}/${fileName}_chain-${chainName}`, { colorTheme, suppressBranched: true });
     }
@@ -439,7 +452,9 @@ export class ImageRenderer {
                 await this.addBallAndStick(getStructureFromExpression(structure, options?.suppressBranched ? RepresentationExpressionNoBranched : RepresentationExpression), { quality });
             }
         }
-
+        // console.log('////////////////////////')
+        // console.log(focusStructure)
+        // console.log('////////////////////////')
         this.focusCamera(focusStructure);
 
         // Write image to file

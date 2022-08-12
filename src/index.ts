@@ -100,14 +100,15 @@ export function getFileName(inPath: string) {
     return arr[arr.length - 1].split('.')[0];
 }
 
+//representative>>>>>>atomicHierarchy>>>>>>>
 async function main() {
     const renderer = new ImageRenderer(args.width, args.height, args.format, args.plddt);
 
     const fileName = getFileName(args.in);
     const cif = await readCifFile(args.in);
     const trajectory = await getTrajectory(cif as CifFrame);
-    console.log(trajectory)
-    console.log('hello')
+    // console.log(trajectory.representative.atomicHierarchy.atoms.auth_atom_id.toArray())
+    // console.log('>>>>hello')
     switch (args.render) {
         case 'all':
             await renderer.renderAll(trajectory, args.out, fileName);
