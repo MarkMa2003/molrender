@@ -6,129 +6,127 @@
  * @author Sebastian Bittrich <sebastian.bittrich@rcsb.org>
  */
 
-import * as argparse from 'argparse';
-import fs = require('fs');
-import { ImageRenderer } from './render';
-import { CifFrame } from 'molstar/lib/mol-io/reader/cif';
-import { getTrajectory, readCifFile } from './util';
-import { Task } from 'molstar/lib/mol-task';
-
-const parser = new argparse.ArgumentParser({
-    add_help: true,
-    description: 'Render images of a structure'
-});
-const subparsers = parser.add_subparsers({
-    title: 'subcommands',
-    dest: 'render'
-});
-
-function addBasicArgs(currParser: argparse.ArgumentParser) {
-    currParser.add_argument('in', {
-        action: 'store',
-        help: 'path to mmCIF file'
-    });
-    currParser.add_argument('out', {
-        action: 'store',
-        help: 'output directory for images'
-    });
-    currParser.add_argument('--width', {
-        action: 'store',
-        help: 'image height',
-        default: 2048
-    });
-    currParser.add_argument('--height', {
-        action: 'store',
-        help: 'image width',
-        default: 1536
-    });
-    currParser.add_argument('--format', {
-        action: 'store',
-        help: 'image format (png or jpeg)',
-        default: 'png'
-    });
-    currParser.add_argument('--plddt', {
-        action: 'store',
-        help: 'color predicted structures by pLDDT (on, single-chain, or off)',
-        default: 'single-chain'
-    });
-}
-
-const modelParser = subparsers.add_parser('model', { add_help: true });
-addBasicArgs(modelParser);
-modelParser.add_argument('modIndex', {
-    action: 'store',
-    help: 'model index'
-});
-
-const assmblyParser = subparsers.add_parser('assembly', { add_help: true });
-addBasicArgs(assmblyParser);
-assmblyParser.add_argument('asmIndex', {
-    action: 'store',
-    help: 'assembly index'
-});
-
-const chainParser = subparsers.add_parser('chain', { add_help: true });
-addBasicArgs(chainParser);
-chainParser.add_argument('chainName', {
-    action: 'store',
-    help: 'chain name'
-});
-
-const modelsParser = subparsers.add_parser('models', { add_help: true });
-addBasicArgs(modelsParser);
-
-const allParser = subparsers.add_parser('all', { add_help: true });
-addBasicArgs(allParser);
-
-const args = parser.parse_args();
-
-if (!fs.existsSync(args.in)) {
-    console.error(`Input path "${args.in}" does not exist`);
-    process.exit(1);
-}
-
-if (!fs.existsSync(args.out)) {
-    fs.mkdirSync(args.out, { recursive: true });
-}
-
-/**
- * Get file name without extension
- * @param inPath path of file
- */
-export function getFileName(inPath: string) {
-    const arr = inPath.split(/[\/\\]/);
-    return arr[arr.length - 1].split('.')[0];
-}
-
-//representative>>>>>>atomicHierarchy>>>>>>>
-async function main() {
-    const renderer = new ImageRenderer(args.width, args.height, args.format, args.plddt);
-
-    const fileName = getFileName(args.in);
-    const cif = await readCifFile(args.in);
-    const trajectory = await getTrajectory(cif as CifFrame);
-    // console.log(trajectory.representative.atomicHierarchy.atoms.auth_atom_id.toArray())
-    // console.log('>>>>hello')
-    switch (args.render) {
-        case 'all':
-            await renderer.renderAll(trajectory, args.out, fileName);
-            break;
-        case 'chain':
-            await renderer.renderChain(args.chainName, await Task.resolveInContext(trajectory.representative), args.out, fileName);
-            break;
-        case 'model':
-            await renderer.renderModel(+args.modIndex + 1, await Task.resolveInContext(trajectory.getFrameAtIndex(args.modIndex)), args.out, fileName);
-            break;
-        case 'assembly':
-            await renderer.renderAssembly(args.asmIndex, await Task.resolveInContext(trajectory.representative), args.out, fileName);
-            break;
-        case 'models':
-            await renderer.renderModels(trajectory, args.out, fileName);
-            break;
-    }
-}
-
-main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
+ import * as argparse from 'argparse';
+ import fs = require('fs');
+ import { ImageRenderer } from './render';
+ import { CifFrame } from 'molstar/lib/mol-io/reader/cif';
+ import { getTrajectory, readCifFile } from './util';
+ import { Task } from 'molstar/lib/mol-task';
+ 
+ const parser = new argparse.ArgumentParser({
+     add_help: true,
+     description: 'Render images of a structure'
+ });
+ const subparsers = parser.add_subparsers({
+     title: 'subcommands',
+     dest: 'render'
+ });
+ 
+ function addBasicArgs(currParser: argparse.ArgumentParser) {
+     currParser.add_argument('in', {
+         action: 'store',
+         help: 'path to mmCIF file'
+     });
+     currParser.add_argument('out', {
+         action: 'store',
+         help: 'output directory for images'
+     });
+     currParser.add_argument('--width', {
+         action: 'store',
+         help: 'image height',
+         default: 2048
+     });
+     currParser.add_argument('--height', {
+         action: 'store',
+         help: 'image width',
+         default: 1536
+     });
+     currParser.add_argument('--format', {
+         action: 'store',
+         help: 'image format (png or jpeg)',
+         default: 'png'
+     });
+     currParser.add_argument('--plddt', {
+         action: 'store',
+         help: 'color predicted structures by pLDDT (on, single-chain, or off)',
+         default: 'single-chain'
+     });
+ }
+ 
+ const modelParser = subparsers.add_parser('model', { add_help: true });
+ addBasicArgs(modelParser);
+ modelParser.add_argument('modIndex', {
+     action: 'store',
+     help: 'model index'
+ });
+ 
+ const assmblyParser = subparsers.add_parser('assembly', { add_help: true });
+ addBasicArgs(assmblyParser);
+ assmblyParser.add_argument('asmIndex', {
+     action: 'store',
+     help: 'assembly index'
+ });
+ 
+ const chainParser = subparsers.add_parser('chain', { add_help: true });
+ addBasicArgs(chainParser);
+ chainParser.add_argument('chainName', {
+     action: 'store',
+     help: 'chain name'
+ });
+ 
+ const modelsParser = subparsers.add_parser('models', { add_help: true });
+ addBasicArgs(modelsParser);
+ 
+ const allParser = subparsers.add_parser('all', { add_help: true });
+ addBasicArgs(allParser);
+ 
+ const args = parser.parse_args();
+ 
+ if (!fs.existsSync(args.in)) {
+     console.error(`Input path "${args.in}" does not exist`);
+     process.exit(1);
+ }
+ 
+ if (!fs.existsSync(args.out)) {
+     fs.mkdirSync(args.out, { recursive: true });
+ }
+ 
+ /**
+  * Get file name without extension
+  * @param inPath path of file
+  */
+ export function getFileName(inPath: string) {
+     const arr = inPath.split(/[\/\\]/);
+     return arr[arr.length - 1].split('.')[0];
+ }
+ 
+ async function main() {
+     const renderer = new ImageRenderer(args.width, args.height, args.format, args.plddt);
+ 
+     const fileName = getFileName(args.in);
+     const cif = await readCifFile(args.in);
+     const trajectory = await getTrajectory(cif as CifFrame);
+ 
+     switch (args.render) {
+         case 'all':
+             await renderer.renderAll(trajectory, args.out, fileName);
+             break;
+         case 'chain':
+             await renderer.renderChain(args.chainName, await Task.resolveInContext(trajectory.representative), args.out, fileName);
+             break;
+         case 'model':
+             await renderer.renderModel(+args.modIndex + 1, await Task.resolveInContext(trajectory.getFrameAtIndex(args.modIndex)), args.out, fileName);
+             break;
+         case 'assembly':
+             await renderer.renderAssembly(args.asmIndex, await Task.resolveInContext(trajectory.representative), args.out, fileName);
+             break;
+         case 'models':
+             await renderer.renderModels(trajectory, args.out, fileName);
+             break;
+     }
+ }
+ 
+ main().catch((error) => {
+     console.error(error);
+     process.exit(1);
+ });

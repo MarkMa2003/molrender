@@ -26,7 +26,7 @@ import {
     StructureSymmetry,
     QueryContext,
     StructureSelection,
-    Trajectory
+    Trajectory,
 } from 'molstar/lib/mol-model/structure';
 import { ModelSymmetry } from 'molstar/lib/mol-model-formats/structure/property/symmetry';
 import { RepresentationContext, RepresentationProvider } from 'molstar/lib/mol-repr/representation';
@@ -82,6 +82,10 @@ function getPositions(structure: Structure) {
     console.log(positions)
     return positions;
 }
+
+// function adjustOrientation(structure: Structure){
+
+// }
 
 function getStructureFromExpression(structure: Structure, expression: Expression) {
     const compiled = compile<StructureSelection>(expression);
@@ -233,7 +237,7 @@ export class ImageRenderer {
         if (colorThemeProvider.ensureCustomProperties) {
             await colorThemeProvider.ensureCustomProperties.attach({ assetManager: this.assetManager, runtime: SyncRuntimeContext }, { structure });
         }
-        
+
         const repr = provider.factory(this.reprCtx, provider.getParams);
         repr.setTheme({
             color: this.reprCtx.colorThemeRegistry.create(params.colorTheme, { structure }, { carbonColor: { name: 'element-symbol' } }),
@@ -243,9 +247,7 @@ export class ImageRenderer {
         if (params.radiusOffset) Object.assign(props, { radiusOffset: params.radiusOffset });
         await repr.createOrUpdate(props, structure).run();
         this.canvas3d.add(repr);
-        console.log('//////////provider/////////')
-        console.log(provider.getData)
-        console.log(provider.getParams)
+  
     }
 
     async addCartoon(structure: Structure, params: Partial<ReprParams> = {}) {
@@ -350,15 +352,8 @@ export class ImageRenderer {
     focusCamera(structure: Structure) {
         const principalAxes = PrincipalAxes.ofPositions(getPositions(structure));
         const { origin, dirA, dirC } = principalAxes.boxAxes;
-        console.log('/////origin/////')
-        console.log(origin)
-        console.log('/////dirA/////')
-        console.log(dirA)
-        console.log('/////dirC/////')
-        console.log(dirC)
         const radius = Vec3.magnitude(dirA);
-        console.log('/////radius/////')
-        console.log(radius)
+
         // move camera far in the direction from the origin, so we get a view from the outside
         const position = Vec3();
         Vec3.scaleAndAdd(position, position, origin, 100);
@@ -452,9 +447,7 @@ export class ImageRenderer {
                 await this.addBallAndStick(getStructureFromExpression(structure, options?.suppressBranched ? RepresentationExpressionNoBranched : RepresentationExpression), { quality });
             }
         }
-        // console.log('////////////////////////')
-        // console.log(focusStructure)
-        // console.log('////////////////////////')
+
         this.focusCamera(focusStructure);
 
         // Write image to file
