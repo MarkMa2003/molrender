@@ -39,7 +39,7 @@ import { Vec3 } from 'molstar/lib/mol-math/linear-algebra';
 import { Expression } from 'molstar/lib/mol-script/language/expression';
 import { VisualQuality } from 'molstar/lib/mol-geo/geometry/base';
 import { getStructureQuality } from 'molstar/lib/mol-repr/util';
-//import { Camera } from 'molstar/lib/mol-canvas3d/camera';
+import { Camera } from 'molstar/lib/mol-canvas3d/camera';
 import { SyncRuntimeContext } from 'molstar/lib/mol-task/execution/synchronous';
 import { AssetManager } from 'molstar/lib/mol-util/assets';
 import { RuntimeContext, Task } from 'molstar/lib/mol-task';
@@ -79,9 +79,6 @@ function getPositions(structure: Structure) {
         }
         m += elements.length * 3;
     }
-    console.log('////////////////////')
-    console.log(positions)
-    console.log('////////////////////')
     return positions;
 }
 
@@ -353,25 +350,24 @@ export class ImageRenderer {
 
     focusCamera(structure: Structure) {
         const principalAxes = PrincipalAxes.ofPositions(getPositions(structure));
-        const { origin, dirA, dirB, dirC } = principalAxes.boxAxes;
-        //console.log(principalAxes.boxAxes);
-        //console.log(principalAxes.momentsAxes);
-        const radius = Vec3.magnitude(dirA);
-
+        const { origin,dirA, dirB, dirC } = principalAxes.boxAxes;
+        const radius = Vec3.magnitude(dirC);
+        console.log(origin,dirA,dirB,dirC)
         // move camera far in the direction from the origin, so we get a view from the outside
-        /*const position = Vec3();
+        const position = Vec3();
+        //last arg is 100
         Vec3.scaleAndAdd(position, position, origin, 100);
-        this.canvas3d.camera.setState({ position }, 0);*/
-
+        console.log(position)
+        this.canvas3d.camera.setState({position}, 0);
         // tight zoom
-        console.log(-dirB[0], -dirB[1], -dirB[2]);
-        this.canvas3d.camera.focus(origin, radius, 0, [-dirB[0], -dirB[1], -dirB[2]] as Vec3, dirC);
+        // Original:dirA dirC
+        this.canvas3d.camera.focus(origin, radius, 0, dirB,dirC);
 
         // ensure nothing is clipped off in the front
-        /*const state = Camera.copySnapshot(Camera.createDefaultSnapshot(), this.canvas3d.camera.state);
+        const state = Camera.copySnapshot(Camera.createDefaultSnapshot(), this.canvas3d.camera.state);
         state.radius = structure.boundary.sphere.radius;
         state.radiusMax = structure.boundary.sphere.radius;
-        this.canvas3d.camera.setState(state);*/
+        this.canvas3d.camera.setState(state);
     }
 
     /**
