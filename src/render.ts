@@ -50,7 +50,6 @@ import { ColorNames } from 'molstar/lib/mol-util/color/names';
 import { PLDDTConfidenceColorThemeProvider } from 'molstar/lib/extensions/model-archive/quality-assessment/color/plddt';
 import { FocusExpression, FocusExpressionNoBranched,
     RepresentationExpression, RepresentationExpressionNoBranched, SmallFocusExpression } from './expression';
-
 /**
  * Helper method to create PNG with given PNG data
  */
@@ -349,19 +348,20 @@ export class ImageRenderer {
     }
 
     focusCamera(structure: Structure) {
+        //<reset cto original state>
+        this.canvas3d.camera.setState(Camera.createDefaultSnapshot());
+
         const principalAxes = PrincipalAxes.ofPositions(getPositions(structure));
-        const { origin,dirA, dirB, dirC } = principalAxes.boxAxes;
+        const { origin,dirA, dirC } = principalAxes.boxAxes;
         const radius = Vec3.magnitude(dirC);
-        console.log(origin,dirA,dirB,dirC)
         // move camera far in the direction from the origin, so we get a view from the outside
         const position = Vec3();
         //last arg is 100
         Vec3.scaleAndAdd(position, position, origin, 100);
-        console.log(position)
         this.canvas3d.camera.setState({position}, 0);
         // tight zoom
         // Original:dirA dirC
-        this.canvas3d.camera.focus(origin, radius, 0, dirB,dirC);
+        this.canvas3d.camera.focus(origin, radius, 0, dirA,dirC);
 
         // ensure nothing is clipped off in the front
         const state = Camera.copySnapshot(Camera.createDefaultSnapshot(), this.canvas3d.camera.state);

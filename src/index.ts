@@ -106,12 +106,12 @@
      const fileName = getFileName(args.in);
      const cif = await readCifFile(args.in);
      const trajectory = await getTrajectory(cif as CifFrame);
- 
      switch (args.render) {
          case 'all':
              await renderer.renderAll(trajectory, args.out, fileName);
              break;
          case 'chain':
+             //await renderer.renderChain(args.chainName, await Task.resolveInContext(trajectory.representative), args.out, fileName);
              await renderer.renderChain(args.chainName, await Task.resolveInContext(trajectory.representative), args.out, fileName);
              break;
          case 'model':
