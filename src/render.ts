@@ -352,17 +352,20 @@ export class ImageRenderer {
         this.canvas3d.camera.setState(Camera.createDefaultSnapshot());
 
         const principalAxes = PrincipalAxes.ofPositions(getPositions(structure));
+        console.log(principalAxes)
+        
         const { origin,dirA, dirC } = principalAxes.boxAxes;
         const radius = Vec3.magnitude(dirC);
+        console.log(radius)
         // move camera far in the direction from the origin, so we get a view from the outside
         const position = Vec3();
         //last arg is 100
-        Vec3.scaleAndAdd(position, position, origin, 100);
+        Vec3.scaleAndAdd(position, position, origin, 1);
         this.canvas3d.camera.setState({position}, 0);
         // tight zoom
         // Original:dirA dirC
-        this.canvas3d.camera.focus(origin, radius, 0, dirA,dirC);
-
+        this.canvas3d.camera.focus(origin, radius, 0, dirA,[-dirC[0],-dirC[1],-dirC[2]]as Vec3);
+        
         // ensure nothing is clipped off in the front
         const state = Camera.copySnapshot(Camera.createDefaultSnapshot(), this.canvas3d.camera.state);
         state.radius = structure.boundary.sphere.radius;
