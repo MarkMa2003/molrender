@@ -347,24 +347,99 @@ export class ImageRenderer {
         return { data: new Uint8ClampedArray(array), width, height };
     }
 
+    ////////////////
+    calculateDisplacement(positions: Float32Array, origin: Vec3, normalDir: Vec3){
+        const toReturn=new Float32Array(positions.length/3)
+        const A=normalDir[0];
+        const B=normalDir[1];
+        const C=normalDir[2]; 
+        const D=-A*origin[0]-B*origin[1]-C*origin[2];
+        for(let i=0; i<positions.length; i+=3){
+            const x=positions[i];
+            const y=positions[i+1];
+            const z=positions[i+2];
+            const displacement= (A*x+B*y+C*z+D)/Math.sqrt(A*A+B*B+C*C)
+            toReturn[i/3]=displacement;
+        }
+        return toReturn;
+    }
+
+    //used to be up dir normalDir
+    getAxesToFlip(positions: Float32Array, origin:Vec3, up: Vec3, dir:Vec3, normalDir:Vec3){
+        const toYAxis=this.calculateDisplacement(positions,origin,normalDir)
+        const toXAxis=this.calculateDisplacement(positions,origin,up)
+        let toReturn=''
+        let y_pos_x_count=0;
+        let y_pos_x_var=0;
+        let y_neg_x_count=0;
+        let y_neg_x_var=0;
+        for(let i=0; i<toYAxis.length;i++){
+            if(toXAxis[i]>0){
+                y_pos_x_count++;
+                y_pos_x_var+=toYAxis[i]*toYAxis[i]
+            }
+            else{
+                y_neg_x_count++;
+                y_neg_x_var+=toYAxis[i]*toYAxis[i]
+            }
+        }
+        if((y_neg_x_var/(y_neg_x_count-1))>(y_pos_x_var/(y_pos_x_count-1))){
+            toReturn+='up'
+        }
+        let x_pos_y_count=0;
+        let x_pos_y_var=0;
+        let x_neg_y_count=0;
+        let x_neg_y_var=0;
+        for(let i=0;i<toXAxis.length;i++){
+            if(toYAxis[i]>0){
+                x_pos_y_count++;
+                x_pos_y_var+=toXAxis[i]*toXAxis[i]
+            }
+            else{
+                x_neg_y_count++;
+                x_neg_y_var+=toXAxis[i]*toXAxis[i]
+            }
+        }
+        if((x_neg_y_var/(x_neg_y_count-1))>(x_pos_y_var/(x_pos_y_count-1))){
+            toReturn+='dir'
+        }
+        return toReturn
+    }
+    ////////////////
+
     focusCamera(structure: Structure) {
         //<reset cto original state>
         this.canvas3d.camera.setState(Camera.createDefaultSnapshot());
-
-        const principalAxes = PrincipalAxes.ofPositions(getPositions(structure));
+        const caPositions=getPositions(structure)
+        const principalAxes = PrincipalAxes.ofPositions(caPositions);
         console.log(principalAxes)
         
-        const { origin,dirA, dirC } = principalAxes.boxAxes;
+        let { origin,dirA,dirB, dirC } = principalAxes.boxAxes;
+        // BAC X
+        // ABC X
+        // ACB
+        // BCA x
+        const toFlip=this.getAxesToFlip(caPositions,origin,dirA,dirC,dirB)
+        if(toFlip==='up'){
+            //dirA=[-dirA[0],-dirA[1],-dirA[2]] as Vec3;
+        }
+        else if(toFlip==='dir'){
+            dirC=[-dirC[0],-dirC[1],-dirC[2]] as Vec3;
+        }
+        else if(toFlip==='updir'){
+            //dirA=[-dirA[0],-dirA[1],-dirA[2]] as Vec3;
+            dirC=[-dirC[0],-dirC[1],-dirC[2]] as Vec3;
+        }
         const radius = Vec3.magnitude(dirC);
-        console.log(radius)
         // move camera far in the direction from the origin, so we get a view from the outside
         const position = Vec3();
         //last arg is 100
-        Vec3.scaleAndAdd(position, position, origin, 1);
+        Vec3.scaleAndAdd(position, position, origin, 100);
         this.canvas3d.camera.setState({position}, 0);
         // tight zoom
         // Original:dirA dirC
-        this.canvas3d.camera.focus(origin, radius, 0, dirA,[-dirC[0],-dirC[1],-dirC[2]]as Vec3);
+        console.log(dirB,dirC)
+        this.canvas3d.camera.focus(origin, radius, 0, dirA,dirC);
         
         // ensure nothing is clipped off in the front
         const state = Camera.copySnapshot(Camera.createDefaultSnapshot(), this.canvas3d.camera.state);
