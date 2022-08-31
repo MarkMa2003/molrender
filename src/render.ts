@@ -415,10 +415,6 @@ export class ImageRenderer {
         console.log(principalAxes)
         
         let { origin,dirA,dirB, dirC } = principalAxes.boxAxes;
-        // BAC X
-        // ABC X
-        // ACB
-        // BCA x
         const toFlip=this.getAxesToFlip(caPositions,origin,dirA,dirC,dirB)
         if(toFlip==='up'){
             //dirA=[-dirA[0],-dirA[1],-dirA[2]] as Vec3;
